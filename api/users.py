@@ -1,13 +1,20 @@
+import os
+import json
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, firestore
+from dotenv import load_dotenv
+
+# Carregar variáveis de ambiente
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["https://vencimento.vercel.app"]}})
 
 # Configuração do Firebase
-cred = credentials.Certificate("C:\\Users\\Gabiru\\Desktop\\vencimento\\validade-74f73-firebase-adminsdk-d37x2-3a6db9e4ed.json")
+cred_json = os.environ['FIREBASE_CREDENTIALS']
+cred = credentials.Certificate(json.loads(cred_json))
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
