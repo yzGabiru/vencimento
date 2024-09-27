@@ -1,45 +1,38 @@
-import sys
-import pyodbc
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from supabase import create_client, Client
 
 app = Flask(__name__)
-CORS(app)  # Permitir todas as origens
+CORS(app)
 
-def get_db_connection():
-    try:
-        conn = pyodbc.connect(
-            r'DRIVER={SQL Server};'
-            r'SERVER=DESKTOP-RN5FHVV\SQLEXPRESS02;'
-            r'DATABASE=VALIDADE;'
-            r'TRUSTED_CONNECTION=yes;'
-        )
-        return conn
-    except Exception as e:
-        print(f"Erro ao conectar ao banco de dados: {e}")
-        return None
+# Configurações do Supabase
+url = "https://jrsuxglwohshxxikzydj.supabase.co/"
+key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyc3V4Z2x3b2hzaHh4aWt6eWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjc0NjkyMzUsImV4cCI6MjA0MzA0NTIzNX0.6R0X1dtT2V7EAgpIEiDZt0tUmOVtXiFlQlNvyOyG-MI"
+supabase: Client = create_client(url, key)
 
 @app.route('/')
 def index():
     return "Server is running!"
 
 # Buscar produtos
-@app.route('/api/users', methods=['GET'])
+@app.route('/users', methods=['GET'])
 def get_users():
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"error": "Erro de conexão com o banco de dados."}), 500
-
-    cursor = conn.cursor()
-    cursor.execute("SELECT CODIGO_VALIDADE, CODIGO_BARRA, NOME_PRODUTO, QUANTIDADE_PRODUTO, VALIDADE FROM VALIDADE_PRODUTOS")
-    rows = cursor.fetchall()
-    users = [{"CODIGO_VALIDADE": row[0], "CODIGO_BARRA": row[1], "NOME_PRODUTO": row[2], "QUANTIDADE_PRODUTO": row[3], "VALIDADE": row[4]} for row in rows]
-    cursor.close()
-    conn.close()
+    response = supabase.table("VALIDADE_PRODUTOS").select("*").execute()
+    users = response.data
     return jsonify(users)
 
+# Verificar se o produto existe
+@app.route('/users/<codigo_barra>', methods=['GET'])
+def check_product(codigo_barra):
+    response = supabase.table("VALIDADE_PRODUTOS").select("NOME_PRODUTO").eq("CODIGO_BARRA", codigo_barra).execute()
+    product = response.data
+    if product:
+        return jsonify({"NOME_PRODUTO": product[0]['NOME_PRODUTO']}), 200
+    else:
+        return jsonify({"error": "Produto não encontrado."}), 404
+
 # Adicionar produto
-@app.route('/api/users', methods=['POST'])
+@app.route('/users', methods=['POST'])
 def add_user():
     productData = request.json
     codigo_barra = productData.get('CODIGO_BARRA')
@@ -50,41 +43,30 @@ def add_user():
     if not all([codigo_barra, quantidade, validade_produto]):
         return jsonify({"error": "Código de barras, quantidade e validade são obrigatórios"}), 400
 
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"error": "Erro de conexão com o banco de dados."}), 500
-
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO VALIDADE_PRODUTOS (CODIGO_BARRA, NOME_PRODUTO, QUANTIDADE_PRODUTO, VALIDADE) VALUES (?, ?, ?, ?)", 
-        (codigo_barra, nome_produto, quantidade, validade_produto)
-    )
-    conn.commit()
-    cursor.close()
-    conn.close()
+    # Inserindo o produto na tabela
+    supabase.table("VALIDADE_PRODUTOS").insert({
+        "CODIGO_BARRA": codigo_barra,
+        "NOME_PRODUTO": nome_produto,
+        "QUANTIDADE_PRODUTO": quantidade,
+        "VALIDADE": validade_produto
+    }).execute()
     
     return jsonify({"message": "Produto cadastrado com sucesso."}), 201
 
 # Deletar produto
-@app.route('/api/users/<codigo_validade>', methods=['DELETE'])
-def delete_user(codigo_validade):
+@app.route('/users', methods=['DELETE'])
+def delete_user():
+    codigo_validade = request.json.get('CODIGO_VALIDADE')
+    
     if not codigo_validade:
         return jsonify({"error": "Código de validade é obrigatório."}), 400
 
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"error": "Erro de conexão com o banco de dados."}), 500
-
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM VALIDADE_PRODUTOS WHERE CODIGO_VALIDADE = ?", (codigo_validade,))
-    if cursor.rowcount == 0:
+    # Deletando o produto da tabela
+    response = supabase.table("VALIDADE_PRODUTOS").delete().eq("CODIGO_VALIDADE", codigo_validade).execute()
+    if response.data:
+        return jsonify({"message": "Produto deletado com sucesso."}), 200
+    else:
         return jsonify({"error": "Produto não encontrado."}), 404
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-    
-    return jsonify({"message": "Produto deletado com sucesso."}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
