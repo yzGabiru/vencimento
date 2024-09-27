@@ -3,7 +3,7 @@ from flask_cors import CORS
 from supabase import create_client, Client
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": ["https://vencimento.vercel.app"]}})
 
 # Configurações do Supabase
 url = "https://jrsuxglwohshxxikzydj.supabase.co/"
