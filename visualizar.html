@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizar Produtos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Lista de Produtos</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Código de Barras</th>
+                <th>Nome do Produto</th>
+                <th>Quantidade</th>
+                <th>Validade</th>
+            </tr>
+        </thead>
+        <tbody id="productTableBody">
+            <!-- Os produtos serão inseridos aqui -->
+        </tbody>
+    </table>
+
+    <br>
+    <a href="inicio.html">Voltar ao Cadastro Inicio</a>
+
+    <script>
+        // Função para buscar produtos e exibir na tabela
+        function fetchProducts() {
+            fetch('http://localhost:5000/users')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar produtos');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const tableBody = document.getElementById('productTableBody');
+                    tableBody.innerHTML = ''; // Limpa a tabela antes de adicionar novos dados
+
+                    data.forEach(product => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${product.CODIGO_BARRA}</td>
+                            <td>${product.NOME_PRODUTO}</td>
+                            <td>${product.QUANTIDADE_PRODUTO}</td>
+                            <td>${product.VALIDADE}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao buscar produtos: ' + error.message);
+                });
+        }
+
+        // Chama a função para buscar produtos ao carregar a página
+        window.onload = fetchProducts;
+    </script>
+</body>
+</html>

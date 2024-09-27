@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deletar Produto</title>
+</head>
+<body>
+    <h1>Deletar Produto</h1>
+    
+    <label for="deleteBarcodeInput">Código de Barras para Deletar:</label>
+    <input type="text" id="deleteBarcodeInput" placeholder="Código de Barras" required>
+    <button id="searchBtn">Buscar Produtos</button>
+    
+    <div id="productList"></div>
+
+    <button id="deleteBtn" style="display:none;">Deletar Produto</button>
+
+    <br><br>
+    <a href="inicio.html">Voltar ao Inicio</a>
+
+    <script>
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const deleteBarcodeValue = document.getElementById('deleteBarcodeInput').value;
+
+            if (deleteBarcodeValue) {
+                fetch(`http://localhost:5000/users?codigo_barra=${deleteBarcodeValue}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw new Error(err.error); });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const productList = document.getElementById('productList');
+                        productList.innerHTML = '';
+
+                        if (data.length > 0) {
+                            data.forEach(product => {
+                                const productItem = document.createElement('div');
+                                productItem.innerHTML = `
+                                    <input type="radio" name="product" value="${product.CODIGO_VALIDADE}"> 
+                                    ${product.NOME_PRODUTO} - Quantidade: ${product.QUANTIDADE_PRODUTO} - Validade: ${product.VALIDADE}
+                                `;
+                                productList.appendChild(productItem);
+                            });
+                            document.getElementById('deleteBtn').style.display = 'inline'; // Mostra o botão de deletar
+                        } else {
+                            productList.innerHTML = 'Nenhum produto encontrado com esse código de barras.';
+                            document.getElementById('deleteBtn').style.display = 'none'; // Esconde o botão se não houver produtos
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Erro ao buscar produtos:', error);
+                        alert('Erro ao buscar produtos: ' + error.message);
+                    });
+            } else {
+                alert('Por favor, insira o código de barras do produto a ser deletado.');
+            }
+        });
+
+        document.getElementById('deleteBtn').addEventListener('click', () => {
+            const selectedProduct = document.querySelector('input[name="product"]:checked');
+
+            if (selectedProduct) {
+                const codigo_validade = selectedProduct.value; // ID do produto a ser deletado
+
+                fetch('http://localhost:5000/users', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ CODIGO_VALIDADE: codigo_validade }), // Passa o ID para deletar
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.error); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Produto deletado com sucesso:', data);
+                    alert('Produto deletado!');
+                    document.getElementById('productList').innerHTML = ''; // Limpa a lista de produtos
+                    document.getElementById('deleteBtn').style.display = 'none'; // Esconde o botão de deletar
+                })
+                .catch((error) => {
+                    console.error('Erro ao deletar o produto:', error);
+                    alert('Erro ao deletar o produto: ' + error.message);
+                });
+            } else {
+                alert('Por favor, selecione um produto para deletar.');
+            }
+        });
+    </script>
+</body>
+</html>
