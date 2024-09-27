@@ -1,14 +1,15 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from supabase import create_client, Client
+import firebase_admin
+from firebase_admin import credentials, firestore
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["https://vencimento.vercel.app"]}})
 
-# Configurações do Supabase
-url = "https://jrsuxglwohshxxikzydj.supabase.co/"
-key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyc3V4Z2x3b2hzaHh4aWt6eWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjc0NjkyMzUsImV4cCI6MjA0MzA0NTIzNX0.6R0X1dtT2V7EAgpIEiDZt0tUmOVtXiFlQlNvyOyG-MI"
-supabase: Client = create_client(url, key)
+# Configuração do Firebase
+cred = credentials.Certificate("C:\Users\Gabiru\Desktop\vencimento\validade-74f73-firebase-adminsdk-d37x2-3a6db9e4ed.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
 @app.route('/')
 def index():
@@ -17,17 +18,18 @@ def index():
 # Buscar produtos
 @app.route('/users', methods=['GET'])
 def get_users():
-    response = supabase.table("VALIDADE_PRODUTOS").select("*").execute()
-    users = response.data
-    return jsonify(users)
+    users_ref = db.collection("VALIDADE_PRODUTOS")
+    users = users_ref.stream()
+    products = [{doc.id: doc.to_dict()} for doc in users]
+    return jsonify({"produtos": products})
 
 # Verificar se o produto existe
 @app.route('/users/<codigo_barra>', methods=['GET'])
 def check_product(codigo_barra):
-    response = supabase.table("VALIDADE_PRODUTOS").select("NOME_PRODUTO").eq("CODIGO_BARRA", codigo_barra).execute()
-    product = response.data
-    if product:
-        return jsonify({"NOME_PRODUTO": product[0]['NOME_PRODUTO']}), 200
+    doc_ref = db.collection("VALIDADE_PRODUTOS").document(codigo_barra)
+    product = doc_ref.get()
+    if product.exists:
+        return jsonify({"NOME_PRODUTO": product.to_dict()['NOME_PRODUTO']}), 200
     else:
         return jsonify({"error": "Produto não encontrado."}), 404
 
@@ -43,30 +45,30 @@ def add_user():
     if not all([codigo_barra, quantidade, validade_produto]):
         return jsonify({"error": "Código de barras, quantidade e validade são obrigatórios"}), 400
 
-    # Inserindo o produto na tabela
-    supabase.table("VALIDADE_PRODUTOS").insert({
-        "CODIGO_BARRA": codigo_barra,
+    # Inserindo o produto na coleção
+    db.collection("VALIDADE_PRODUTOS").document(codigo_barra).set({
         "NOME_PRODUTO": nome_produto,
         "QUANTIDADE_PRODUTO": quantidade,
         "VALIDADE": validade_produto
-    }).execute()
+    })
     
     return jsonify({"message": "Produto cadastrado com sucesso."}), 201
 
 # Deletar produto
 @app.route('/users', methods=['DELETE'])
 def delete_user():
-    codigo_validade = request.json.get('CODIGO_VALIDADE')
+    codigo_barra = request.json.get('CODIGO_BARRA')
     
-    if not codigo_validade:
-        return jsonify({"error": "Código de validade é obrigatório."}), 400
+    if not codigo_barra:
+        return jsonify({"error": "Código de barras é obrigatório."}), 400
 
-    # Deletando o produto da tabela
-    response = supabase.table("VALIDADE_PRODUTOS").delete().eq("CODIGO_VALIDADE", codigo_validade).execute()
-    if response.data:
+    # Verificando se o produto existe antes de deletar
+    doc_ref = db.collection("VALIDADE_PRODUTOS").document(codigo_barra)
+    if doc_ref.get().exists:
+        doc_ref.delete()
         return jsonify({"message": "Produto deletado com sucesso."}), 200
     else:
         return jsonify({"error": "Produto não encontrado."}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True)  # Use debug=False em produção

@@ -36,8 +36,7 @@
             document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
 
             // Verifica se o produto já existe
-            // Atualizar as URLs para a API
-            fetch(`https://vencimento.vercel.app/api/users/${barcodeValue}`)
+            fetch(`http://localhost:5000/users/${barcodeValue}`) // Mantenha aqui para teste local ou altere para produção
                 .then(response => {
                     if (response.ok) {
                         return response.json();
@@ -72,7 +71,7 @@
                     VALIDADE: expiryDate
                 };
 
-                fetch('http://localhost:5000/users', {
+                fetch('http://localhost:5000/users', { // Mantenha aqui para teste local ou altere para produção
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',     
