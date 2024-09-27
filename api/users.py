@@ -13,7 +13,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["https://vencimento.vercel.app"]}})
 
 # Configuração do Firebase
-cred_json = os.environ['FIREBASE_CREDENTIALS']
+cred_json = os.environ.get('FIREBASE_CREDENTIALS') 
 cred = credentials.Certificate(json.loads(cred_json))
 firebase_admin.initialize_app(cred)
 db = firestore.client()
