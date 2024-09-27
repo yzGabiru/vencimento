@@ -36,7 +36,8 @@
             document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
 
             // Verifica se o produto já existe
-            fetch(`https://seu-app.vercel.app/api/users/${barcodeValue}`)
+            // Atualizar as URLs para a API
+            fetch(`https://vencimento.vercel.app/api/users/${barcodeValue}`)
                 .then(response => {
                     if (response.ok) {
                         return response.json();
