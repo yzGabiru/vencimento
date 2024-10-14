@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitor de Códigos de Barras</title>
+    <script src="https://unpkg.com/@zxing/library"></script>
+</head>
+<body>
+    <div id="camera"></div>
+    <div id="output"></div>
+    
+    <script>
+        const codeReader = new ZXing.BrowserMultiFormatReader();
+        let barcodeValue = '';
+        let selectedCameraId = ''; // Variável para armazenar o ID da câmera selecionada
+
+        const initVideo = (stream) => {
+            const videoElement = document.createElement('video');
+            videoElement.srcObject = stream;
+            videoElement.setAttribute('playsinline', true);
+            videoElement.play().catch(err => console.error("Erro ao iniciar o vídeo:", err));
+            return videoElement;
+        };
+
+        const getCameras = async () => {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+            if (videoDevices.length > 0) {
+                //câmera desejada
+                selectedCameraId = videoDevices[0].deviceId; 
+                startCamera(selectedCameraId);
+            } else {
+                console.error("Nenhuma câmera encontrada.");
+            }
+        };
+
+        const startCamera = (cameraId) => {
+            navigator.mediaDevices.getUserMedia({ video: { deviceId: cameraId } })
+                .then((stream) => {
+                    const videoElement = initVideo(stream);
+                    document.getElementById('camera').appendChild(videoElement);
+
+                    const decode = () => {
+                        codeReader.decodeOnceFromVideoDevice(cameraId, videoElement)
+                            .then((result) => {
+                                barcodeValue = result.text;
+                                document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
+                                // Enviar o código de barras para a página pai
+                                window.parent.postMessage(barcodeValue, '*');
+                            })
+                            .catch((err) => {
+                                console.error(err);
+                                requestAnimationFrame(decode);
+                            });
+                    };
+
+                    decode();
+                })
+                .catch(err => {
+                    console.error("Erro ao acessar a câmera:", err);
+                });
+        };
+
+        // Inicia a seleção de câmeras
+        getCameras();
+    </script>
+</body>
+</html>

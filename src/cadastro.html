@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Produto</title>
+</head>
+<body>
+    <h1>Cadastro de Produto</h1>
+    <iframe src="leitor.html" style="width: 100%; height: 300px;" frameborder="0"></iframe>
+    <div id="output"></div>
+    
+    <label for="barcodeInput">Código de Barras:</label>
+    <input type="text" id="barcodeInput" placeholder="Código de Barras" required>
+
+    <label for="productName">Nome do Produto:</label>
+    <input type="text" id="productName" placeholder="Nome do Produto" required>
+
+    <label for="quantidade_produtos">Quantidade de Produtos:</label>
+    <input type="number" id="quantidade_produtos" placeholder="Quantidade de Produtos" required>
+
+    <label for="expiryDate">Validade:</label>
+    <input type="date" id="expiryDate" required>
+
+    <button id="submitBtn">Cadastrar Produto</button>
+    
+    <br><br>
+    <a href="index.html">Inicio</a>
+
+    <script>
+        let barcodeValue = '';
+
+        window.addEventListener('message', (event) => {
+            barcodeValue = event.data;
+            document.getElementById('barcodeInput').value = barcodeValue; 
+            document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
+
+            // Verifica se o produto já existe
+            fetch(`http://localhost:3000/users/${barcodeValue}`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Produto não encontrado.');
+                    }
+                })
+                .then(data => {
+                    document.getElementById('productName').value = data.nome_produto;
+                    document.getElementById('productName').disabled = true; // Desabilita o campo de nome se produto já existe
+                    document.getElementById('quantidade_produtos').value = data.quantidade_produto;
+                })
+                .catch(error => {
+                    console.error(error);
+                    document.getElementById('productName').disabled = false; // Habilita o campo de nome se não encontrado
+                });
+        });
+
+        document.getElementById('barcodeInput').addEventListener('input', (event) => {
+            barcodeValue = event.target.value; 
+        });
+
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            const productName = document.getElementById('productName').value;
+            const expiryDate = document.getElementById('expiryDate').value;
+            const quantidade_produtos = document.getElementById('quantidade_produtos').value;
+
+            // Validação da validade
+            const currentDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
+            if (expiryDate < currentDate) {
+                alert('Erro: A data de validade não pode ser anterior à data atual.');
+                return;
+            }
+
+            if (barcodeValue && productName && expiryDate && quantidade_produtos) {
+                const productData = { 
+                    codigo_barra: barcodeValue, 
+                    nome_produto: productName, 
+                    quantidade_produto: quantidade_produtos,
+                    validade_produto: expiryDate
+                };
+
+                fetch('http://localhost:3000/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',     
+                    },
+                    body: JSON.stringify(productData),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.error); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Produto cadastrado com sucesso:', data);
+                    alert('Produto cadastrado com sucesso!');
+                })
+                .catch((error) => {
+                    console.error('Erro ao cadastrar o produto:', error);
+                    alert('Erro ao cadastrar o produto: ' + error.message);
+                });
+            } else {
+                alert('Por favor, preencha todos os campos.');
+            }
+        });
+    </script>
+</body>
+</html>

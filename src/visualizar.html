@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizar Produtos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        .search-container {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Lista de Produtos</h1>
+    
+    <div class="search-container">
+        <label for="searchInput">Buscar pelo Código de Barras:</label>
+        <input type="text" id="searchInput" placeholder="Digite o código de barras">
+        <button id="searchBtn">Buscar</button>
+        <button id="resetBtn">Resetar</button>
+    </div>
+    
+    <button id="sortNameBtn">Ordenar por Nome</button>
+    <button id="sortDateBtn">Ordenar por Validade</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Código de Barras</th>
+                <th>Nome do Produto</th>
+                <th>Quantidade</th>
+                <th>Validade</th>
+                <th>Ação</th>
+            </tr>
+        </thead>
+        <tbody id="productTableBody">
+            <!-- Os produtos serão inseridos aqui -->
+        </tbody>
+    </table>
+
+    <br>
+    <a href="index.html">Voltar ao Cadastro Início</a>
+
+    <script>
+        let products = []; // Para armazenar os produtos e facilitar a ordenação e pesquisa
+        let filteredProducts = []; // Para armazenar produtos filtrados
+
+        function fetchProducts() {
+            fetch('http://localhost:3000/users') // Atualizando para o endpoint correto
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar produtos');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    products = data; // Armazenar produtos no array
+                    filteredProducts = products; // Inicialmente, os produtos filtrados são todos os produtos
+                    displayProducts(filteredProducts);
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao buscar produtos: ' + error.message);
+                });
+        }
+
+        function displayProducts(productsToDisplay) {
+            const tableBody = document.getElementById('productTableBody');
+            tableBody.innerHTML = '';
+
+            productsToDisplay.forEach(product => {
+                const row = document.createElement('tr'); // Adicionando esta linha para criar o elemento 'tr'
+                const validade_formatada = formatDate(product.validade_produto);
+                row.innerHTML = `
+                    <td>${product.codigo_barra}</td>
+                    <td>${product.nome_produto}</td>
+                    <td>${product.quantidade_produto}</td>
+                    <td>${validade_formatada}</td>
+                    <td><button onclick="deleteProduct('${product.codigo_barra}', '${product.validade_produto}')">Deletar</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('pt-BR', options);
+        }
+
+        function deleteProduct(codigo_barra, validade_produto) {
+            fetch(`http://localhost:3000/users`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ codigo_barra: codigo_barra, validade_produto: validade_produto }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao deletar produto');
+                }
+                alert('Produto deletado com sucesso!');
+                fetchProducts(); // Atualiza a lista de produtos
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao deletar produto: ' + error.message);
+            });
+        }
+
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const searchValue = document.getElementById('searchInput').value.trim();
+            filteredProducts = products.filter(product => 
+                product.codigo_barra.includes(searchValue)
+            );
+            displayProducts(filteredProducts);
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
+            filteredProducts = products; // Resetar a lista filtrada para todos os produtos
+            displayProducts(filteredProducts);
+        });
+
+        document.getElementById('sortNameBtn').addEventListener('click', () => {
+            const sortedProducts = [...filteredProducts].sort((a, b) => a.nome_produto.localeCompare(b.nome_produto));
+            displayProducts(sortedProducts);
+        });
+
+        document.getElementById('sortDateBtn').addEventListener('click', () => {
+            const sortedProducts = [...filteredProducts].sort((a, b) => new Date(a.validade_produto) - new Date(b.validade_produto));
+            displayProducts(sortedProducts);
+        });
+
+        window.onload = fetchProducts;
+    </script>
+</body>
+</html>
