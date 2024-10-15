@@ -14,9 +14,10 @@
         const codeReader = new ZXing.BrowserMultiFormatReader();
         let barcodeValue = '';
         let selectedCameraId = ''; // Variável para armazenar o ID da câmera selecionada
+        let videoElement = null; // Adicionando variável para o elemento de vídeo
 
         const initVideo = (stream) => {
-            const videoElement = document.createElement('video');
+            videoElement = document.createElement('video');
             videoElement.srcObject = stream;
             videoElement.setAttribute('playsinline', true);
             videoElement.play().catch(err => console.error("Erro ao iniciar o vídeo:", err));
@@ -28,7 +29,7 @@
             const videoDevices = devices.filter(device => device.kind === 'videoinput');
 
             if (videoDevices.length > 0) {
-                //câmera desejada
+                // Câmera desejada
                 selectedCameraId = videoDevices[0].deviceId; 
                 startCamera(selectedCameraId);
             } else {
@@ -37,15 +38,20 @@
         };
 
         const startCamera = (cameraId) => {
+            // Para garantir que não há múltiplas chamadas
+            if (videoElement) {
+                videoElement.srcObject.getTracks().forEach(track => track.stop());
+            }
+
             navigator.mediaDevices.getUserMedia({ video: { deviceId: cameraId } })
                 .then((stream) => {
-                    const videoElement = initVideo(stream);
+                    videoElement = initVideo(stream);
                     document.getElementById('camera').appendChild(videoElement);
 
                     const decode = () => {
                         codeReader.decodeOnceFromVideoDevice(cameraId, videoElement)
                             .then((result) => {
-                                if (result && result.text) {
+                                if (result && result.text && typeof result.text === 'string') {
                                     barcodeValue = result.text;
                                     document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
                                     // Enviar o código de barras para a página pai
