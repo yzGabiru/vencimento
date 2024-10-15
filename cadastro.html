@@ -31,8 +31,8 @@
         let barcodeValue = '';
 
         window.addEventListener('message', (event) => {
-            // Verifica se o dado recebido é uma string
-            if (typeof event.data === 'string') {
+            // Verifica se o dado recebido é um código de barras
+            if (event.data && typeof event.data === 'string') {
                 barcodeValue = event.data;
                 document.getElementById('barcodeInput').value = barcodeValue; 
                 document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
@@ -56,7 +56,7 @@
                         document.getElementById('productName').disabled = false; // Habilita o campo de nome se não encontrado
                     });
             } else {
-                console.error('Código de barras não é uma string:', event.data);
+                console.error('Dados recebidos não são válidos:', event.data);
             }
         });
 
