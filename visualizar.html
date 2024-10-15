@@ -9,6 +9,11 @@
             font-family: Arial, sans-serif;
             margin: 20px;
             background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #4a4a4a;
         }
         table {
             width: 100%;
@@ -26,6 +31,43 @@
         }
         .search-container {
             margin-bottom: 20px;
+            text-align: center;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: 30%;
+            margin-right: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .action-buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+            transition: color 0.3s;
+            text-align: center;
+        }
+        a:hover {
+            color: #0056b3;
         }
     </style>
 </head>
@@ -40,8 +82,10 @@
         <button id="resetBtn">Resetar</button>
     </div>
     
-    <button id="sortNameBtn">Ordenar por Nome</button>
-    <button id="sortDateBtn">Ordenar por Validade</button>
+    <div class="action-buttons">
+        <button id="sortNameBtn">Ordenar por Nome</button>
+        <button id="sortDateBtn">Ordenar por Validade</button>
+    </div>
 
     <table>
         <thead>

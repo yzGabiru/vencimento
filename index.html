@@ -13,6 +13,7 @@
         }
         h1 {
             text-align: center;
+            color: #4a4a4a;
         }
         .container {
             max-width: 600px;
@@ -29,18 +30,32 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.3s;
         }
         .add {
             background-color: #28a745;
             color: white;
         }
+        .add:hover {
+            background-color: #218838;
+            transform: scale(1.02);
+        }
         .delete {
             background-color: #dc3545;
             color: white;
         }
+        .delete:hover {
+            background-color: #c82333;
+            transform: scale(1.02);
+        }
         .view {
             background-color: #007bff;
             color: white;
+        }
+        .view:hover {
+            background-color: #0056b3;
+            transform: scale(1.02);
         }
     </style>
 </head>
