@@ -44,18 +44,20 @@
     
     <br><br>
     <a href="index.html">Inicio</a>
-
     <script>
         let barcodeValue = '';
         let isReaderActive = false; // Flag para controlar o estado do leitor
-
+    
         window.addEventListener('message', (event) => {
+            // Ignora mensagens se o leitor não estiver ativo
+            if (!isReaderActive) return;
+    
             // Filtra apenas mensagens que são strings e que podem ser códigos de barras válidos
             if (typeof event.data === 'string' && /^[0-9A-Za-z]+$/.test(event.data)) {
                 barcodeValue = event.data;
                 document.getElementById('barcodeInput').value = barcodeValue; 
                 document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
-
+    
                 // Verifica se o produto já existe
                 fetch(`https://vencimento-api.vercel.app/users/${barcodeValue}`)
                     .then(response => {
@@ -74,7 +76,7 @@
                         console.error(error);
                         document.getElementById('productName').disabled = false; // Habilita o campo de nome se não encontrado
                     });
-
+    
                 // Desativa o leitor após detectar um código
                 isReaderActive = false;
                 document.getElementById('startReaderBtn').innerText = 'Ativar Leitor';
