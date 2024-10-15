@@ -31,8 +31,8 @@
         let barcodeValue = '';
 
         window.addEventListener('message', (event) => {
-            // Verifica se o evento é do leitor de código de barras
-            if (typeof event.data === 'string' && event.data.trim().length > 0) {
+            // Filtra apenas mensagens que são strings e que podem ser códigos de barras válidos
+            if (typeof event.data === 'string' && /^[0-9A-Za-z]+$/.test(event.data)) {
                 barcodeValue = event.data;
                 document.getElementById('barcodeInput').value = barcodeValue; 
                 document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
