@@ -25,14 +25,14 @@
     <button id="submitBtn">Cadastrar Produto</button>
     
     <br><br>
-    <a href="index.html">Início</a>
+    <a href="index.html">Inicio</a>
 
     <script>
         let barcodeValue = '';
 
         window.addEventListener('message', (event) => {
-            // Verifica se o dado recebido é um código de barras
-            if (event.data && typeof event.data === 'string') {
+            // Verifica se o evento é do leitor de código de barras
+            if (typeof event.data === 'string' && event.data.trim().length > 0) {
                 barcodeValue = event.data;
                 document.getElementById('barcodeInput').value = barcodeValue; 
                 document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
@@ -48,7 +48,7 @@
                     })
                     .then(data => {
                         document.getElementById('productName').value = data.nome_produto;
-                        document.getElementById('productName').disabled = true; // Desabilita o campo de nome se produto já existe
+                        document.getElementById('productName').disabled = true; // Desabilita o campo de nome se o produto já existe
                         document.getElementById('quantidade_produtos').value = data.quantidade_produto;
                     })
                     .catch(error => {
@@ -56,7 +56,7 @@
                         document.getElementById('productName').disabled = false; // Habilita o campo de nome se não encontrado
                     });
             } else {
-                console.error('Dados recebidos não são válidos:', event.data);
+                console.warn("Dados recebidos não são válidos:", event.data);
             }
         });
 
@@ -103,7 +103,7 @@
                 })
                 .catch((error) => {
                     console.error('Erro ao cadastrar o produto:', error);
-                    alert('Erro ao cadastrar o produto: ' + (error.message || 'Erro desconhecido.'));
+                    alert('Erro ao cadastrar o produto: ' + error.message);
                 });
             } else {
                 alert('Por favor, preencha todos os campos.');
