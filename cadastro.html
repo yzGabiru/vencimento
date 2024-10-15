@@ -7,7 +7,7 @@
 </head>
 <body>
     <h1>Cadastro de Produto</h1>
-    <iframe src="leitor.html" style="width: 100%; height: 300px;" frameborder="0"></iframe>
+    <iframe id="leitorIframe" src="leitor.html" style="width: 100%; height: 300px;" frameborder="0"></iframe>
     <div id="output"></div>
     
     <label for="barcodeInput">Código de Barras:</label>
@@ -23,12 +23,14 @@
     <input type="date" id="expiryDate" required>
 
     <button id="submitBtn">Cadastrar Produto</button>
+    <button id="startReaderBtn">Ativar Leitor</button>
     
     <br><br>
     <a href="index.html">Inicio</a>
 
     <script>
         let barcodeValue = '';
+        let isReaderActive = false; // Flag para controlar o estado do leitor
 
         window.addEventListener('message', (event) => {
             // Filtra apenas mensagens que são strings e que podem ser códigos de barras válidos
@@ -55,6 +57,10 @@
                         console.error(error);
                         document.getElementById('productName').disabled = false; // Habilita o campo de nome se não encontrado
                     });
+
+                // Desativa o leitor após detectar um código
+                isReaderActive = false;
+                document.getElementById('startReaderBtn').innerText = 'Ativar Leitor';
             } else {
                 console.warn("Dados recebidos não são válidos:", event.data);
             }
@@ -107,6 +113,20 @@
                 });
             } else {
                 alert('Por favor, preencha todos os campos.');
+            }
+        });
+
+        document.getElementById('startReaderBtn').addEventListener('click', () => {
+            if (!isReaderActive) {
+                isReaderActive = true; // Ativa o leitor
+                document.getElementById('startReaderBtn').innerText = 'Desativar Leitor';
+                const iframe = document.getElementById('leitorIframe');
+                iframe.contentWindow.postMessage('start', '*'); // Envia mensagem para iniciar a leitura
+            } else {
+                isReaderActive = false; // Desativa o leitor
+                document.getElementById('startReaderBtn').innerText = 'Ativar Leitor';
+                const iframe = document.getElementById('leitorIframe');
+                iframe.contentWindow.postMessage('stop', '*'); // Envia mensagem para parar a leitura
             }
         });
     </script>
