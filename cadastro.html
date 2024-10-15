@@ -9,6 +9,12 @@
             font-family: Arial, sans-serif;
             padding: 20px;
         }
+        #leitorIframe {
+            display: none; /* Esconder o iframe inicialmente */
+            width: 100%;
+            height: 300px;
+            border: none;
+        }
         #startReaderBtn {
             margin-bottom: 20px; /* Espaço abaixo do botão */
         }
@@ -17,9 +23,9 @@
 <body>
     <h1>Cadastro de Produto</h1>
     
-    <button id="startReaderBtn">Ativar Leitor</button> <!-- Botão posicionado acima -->
+    <button id="startReaderBtn">Ativar Leitor</button> <!-- Botão para ativar/desativar o leitor -->
     
-    <iframe id="leitorIframe" src="leitor.html" style="width: 100%; height: 300px;" frameborder="0"></iframe>
+    <iframe id="leitorIframe" src="leitor.html"></iframe> <!-- iframe inicialmente escondido -->
     <div id="output"></div>
     
     <label for="barcodeInput">Código de Barras:</label>
@@ -72,6 +78,7 @@
                 // Desativa o leitor após detectar um código
                 isReaderActive = false;
                 document.getElementById('startReaderBtn').innerText = 'Ativar Leitor';
+                document.getElementById('leitorIframe').style.display = 'none'; // Esconder o iframe após a leitura
             } else {
                 console.warn("Dados recebidos não são válidos:", event.data);
             }
@@ -128,15 +135,16 @@
         });
 
         document.getElementById('startReaderBtn').addEventListener('click', () => {
+            const iframe = document.getElementById('leitorIframe');
             if (!isReaderActive) {
                 isReaderActive = true; // Ativa o leitor
                 document.getElementById('startReaderBtn').innerText = 'Desativar Leitor';
-                const iframe = document.getElementById('leitorIframe');
+                iframe.style.display = 'block'; // Mostrar o iframe
                 iframe.contentWindow.postMessage('start', '*'); // Envia mensagem para iniciar a leitura
             } else {
                 isReaderActive = false; // Desativa o leitor
                 document.getElementById('startReaderBtn').innerText = 'Ativar Leitor';
-                const iframe = document.getElementById('leitorIframe');
+                iframe.style.display = 'none'; // Esconder o iframe
                 iframe.contentWindow.postMessage('stop', '*'); // Envia mensagem para parar a leitura
             }
         });
