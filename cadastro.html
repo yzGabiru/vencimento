@@ -25,34 +25,39 @@
     <button id="submitBtn">Cadastrar Produto</button>
     
     <br><br>
-    <a href="index.html">Inicio</a>
+    <a href="index.html">Início</a>
 
     <script>
         let barcodeValue = '';
 
         window.addEventListener('message', (event) => {
-            barcodeValue = event.data;
-            document.getElementById('barcodeInput').value = barcodeValue; 
-            document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
+            // Verifica se o dado recebido é uma string
+            if (typeof event.data === 'string') {
+                barcodeValue = event.data;
+                document.getElementById('barcodeInput').value = barcodeValue; 
+                document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
 
-            // Verifica se o produto já existe
-            fetch(`https://vencimento-api.vercel.app/users/${barcodeValue}`)
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        throw new Error('Produto não encontrado.');
-                    }
-                })
-                .then(data => {
-                    document.getElementById('productName').value = data.nome_produto;
-                    document.getElementById('productName').disabled = true; // Desabilita o campo de nome se produto já existe
-                    document.getElementById('quantidade_produtos').value = data.quantidade_produto;
-                })
-                .catch(error => {
-                    console.error(error);
-                    document.getElementById('productName').disabled = false; // Habilita o campo de nome se não encontrado
-                });
+                // Verifica se o produto já existe
+                fetch(`https://vencimento-api.vercel.app/users/${barcodeValue}`)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('Produto não encontrado.');
+                        }
+                    })
+                    .then(data => {
+                        document.getElementById('productName').value = data.nome_produto;
+                        document.getElementById('productName').disabled = true; // Desabilita o campo de nome se produto já existe
+                        document.getElementById('quantidade_produtos').value = data.quantidade_produto;
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        document.getElementById('productName').disabled = false; // Habilita o campo de nome se não encontrado
+                    });
+            } else {
+                console.error('Código de barras não é uma string:', event.data);
+            }
         });
 
         document.getElementById('barcodeInput').addEventListener('input', (event) => {
@@ -98,7 +103,7 @@
                 })
                 .catch((error) => {
                     console.error('Erro ao cadastrar o produto:', error);
-                    alert('Erro ao cadastrar o produto: ' + error.message);
+                    alert('Erro ao cadastrar o produto: ' + (error.message || 'Erro desconhecido.'));
                 });
             } else {
                 alert('Por favor, preencha todos os campos.');
