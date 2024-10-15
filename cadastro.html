@@ -36,7 +36,7 @@
             document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
 
             // Verifica se o produto já existe
-            fetch(`https://vencimento-api.vercel.app/?vercelToolbarCode=0OKDZt84bnGLUP7/users/${barcodeValue}`)
+            fetch(`https://vencimento-api.vercel.app/users/${barcodeValue}`)
                 .then(response => {
                     if (response.ok) {
                         return response.json();
@@ -79,7 +79,7 @@
                     validade_produto: expiryDate
                 };
 
-                fetch('https://vencimento-api.vercel.app/?vercelToolbarCode=0OKDZt84bnGLUP7/users', {
+                fetch('https://vencimento-api.vercel.app/users', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',     
