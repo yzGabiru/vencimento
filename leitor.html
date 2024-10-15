@@ -45,10 +45,16 @@
                     const decode = () => {
                         codeReader.decodeOnceFromVideoDevice(cameraId, videoElement)
                             .then((result) => {
-                                barcodeValue = result.text;
-                                document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
-                                // Enviar o código de barras para a página pai
-                                window.parent.postMessage(barcodeValue, '*');
+                                if (result && result.text) {
+                                    barcodeValue = result.text;
+                                    document.getElementById('output').innerHTML = `Código de barras detectado: ${barcodeValue}`;
+                                    // Enviar o código de barras para a página pai
+                                    window.parent.postMessage(barcodeValue, '*');
+                                } else {
+                                    console.error("Resultado inválido:", result);
+                                }
+                                // Chama novamente a função decode para continuar a leitura
+                                requestAnimationFrame(decode);
                             })
                             .catch((err) => {
                                 console.error(err);
